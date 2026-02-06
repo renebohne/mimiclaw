@@ -2,6 +2,36 @@
 
 /* MimiClaw Global Configuration */
 
+/* Build-time secrets (highest priority, override NVS) */
+#if __has_include("mimi_secrets.h")
+#include "mimi_secrets.h"
+#endif
+
+#ifndef MIMI_SECRET_WIFI_SSID
+#define MIMI_SECRET_WIFI_SSID       ""
+#endif
+#ifndef MIMI_SECRET_WIFI_PASS
+#define MIMI_SECRET_WIFI_PASS       ""
+#endif
+#ifndef MIMI_SECRET_TG_TOKEN
+#define MIMI_SECRET_TG_TOKEN        ""
+#endif
+#ifndef MIMI_SECRET_API_KEY
+#define MIMI_SECRET_API_KEY         ""
+#endif
+#ifndef MIMI_SECRET_MODEL
+#define MIMI_SECRET_MODEL           ""
+#endif
+#ifndef MIMI_SECRET_PROXY_HOST
+#define MIMI_SECRET_PROXY_HOST      ""
+#endif
+#ifndef MIMI_SECRET_PROXY_PORT
+#define MIMI_SECRET_PROXY_PORT      ""
+#endif
+#ifndef MIMI_SECRET_SEARCH_KEY
+#define MIMI_SECRET_SEARCH_KEY      ""
+#endif
+
 /* WiFi */
 #define MIMI_WIFI_MAX_RETRY          10
 #define MIMI_WIFI_RETRY_BASE_MS      1000
@@ -19,6 +49,8 @@
 #define MIMI_AGENT_PRIO              6
 #define MIMI_AGENT_CORE              1
 #define MIMI_AGENT_MAX_HISTORY       20
+#define MIMI_AGENT_MAX_TOOL_ITER     10
+#define MIMI_MAX_TOOL_CALLS          4
 
 /* LLM */
 #define MIMI_LLM_DEFAULT_MODEL       "claude-opus-4-6"
@@ -58,6 +90,7 @@
 #define MIMI_NVS_TG                  "tg_config"
 #define MIMI_NVS_LLM                 "llm_config"
 #define MIMI_NVS_PROXY               "proxy_config"
+#define MIMI_NVS_SEARCH              "search_config"
 
 /* NVS Keys */
 #define MIMI_NVS_KEY_SSID            "ssid"

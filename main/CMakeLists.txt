@@ -13,6 +13,8 @@ idf_component_register(
         "cli/serial_cli.c"
         "ota/ota_manager.c"
         "proxy/http_proxy.c"
+        "tools/tool_registry.c"
+        "tools/tool_web_search.c"
     INCLUDE_DIRS
         "."
     REQUIRES
