@@ -15,6 +15,12 @@
 
 static const char *TAG = "proxy";
 
+/* Only show warnings/errors by default; reduce polling noise */
+__attribute__((constructor)) static void proxy_log_level(void)
+{
+    esp_log_level_set(TAG, ESP_LOG_WARN);
+}
+
 /* ── Config (cached from NVS) ─────────────────────────────────── */
 
 static char     s_proxy_host[64] = {0};
@@ -22,13 +28,19 @@ static uint16_t s_proxy_port     = 0;
 
 esp_err_t http_proxy_init(void)
 {
-    nvs_handle_t nvs;
-    esp_err_t err = nvs_open(MIMI_NVS_PROXY, NVS_READONLY, &nvs);
-    if (err == ESP_OK) {
-        size_t len = sizeof(s_proxy_host);
-        nvs_get_str(nvs, MIMI_NVS_KEY_PROXY_HOST, s_proxy_host, &len);
-        nvs_get_u16(nvs, MIMI_NVS_KEY_PROXY_PORT, &s_proxy_port);
-        nvs_close(nvs);
+    /* Build-time secrets take highest priority */
+    if (MIMI_SECRET_PROXY_HOST[0] != '\0' && MIMI_SECRET_PROXY_PORT[0] != '\0') {
+        strncpy(s_proxy_host, MIMI_SECRET_PROXY_HOST, sizeof(s_proxy_host) - 1);
+        s_proxy_port = (uint16_t)atoi(MIMI_SECRET_PROXY_PORT);
+    } else {
+        nvs_handle_t nvs;
+        esp_err_t err = nvs_open(MIMI_NVS_PROXY, NVS_READONLY, &nvs);
+        if (err == ESP_OK) {
+            size_t len = sizeof(s_proxy_host);
+            nvs_get_str(nvs, MIMI_NVS_KEY_PROXY_HOST, s_proxy_host, &len);
+            nvs_get_u16(nvs, MIMI_NVS_KEY_PROXY_PORT, &s_proxy_port);
+            nvs_close(nvs);
+        }
     }
 
     if (s_proxy_host[0] && s_proxy_port) {

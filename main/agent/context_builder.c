@@ -43,7 +43,12 @@ esp_err_t context_build_system_prompt(char *buf, size_t size)
         "You are MimiClaw, a personal AI assistant running on an ESP32-S3 device.\n"
         "You communicate through Telegram and WebSocket.\n\n"
         "## Current Time\n%s\n\n"
-        "Be helpful, accurate, and concise.\n",
+        "Be helpful, accurate, and concise.\n\n"
+        "## Available Tools\n"
+        "You have access to the following tools:\n"
+        "- web_search: Search the web for current information. "
+        "Use this when you need up-to-date facts, news, weather, or anything beyond your training data.\n\n"
+        "Use tools when needed. Provide your final answer as text after using tools.\n",
         time_str);
 
     /* Bootstrap files */

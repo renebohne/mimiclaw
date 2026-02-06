@@ -6,6 +6,7 @@
 #include "memory/memory_store.h"
 #include "memory/session_mgr.h"
 #include "proxy/http_proxy.h"
+#include "tools/tool_web_search.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -202,6 +203,24 @@ static int cmd_clear_proxy(int argc, char **argv)
     return 0;
 }
 
+/* --- set_search_key command --- */
+static struct {
+    struct arg_str *key;
+    struct arg_end *end;
+} search_key_args;
+
+static int cmd_set_search_key(int argc, char **argv)
+{
+    int nerrors = arg_parse(argc, argv, (void **)&search_key_args);
+    if (nerrors != 0) {
+        arg_print_errors(stderr, search_key_args.end, argv[0]);
+        return 1;
+    }
+    tool_web_search_set_key(search_key_args.key->sval[0]);
+    printf("Search API key saved.\n");
+    return 0;
+}
+
 /* --- restart command --- */
 static int cmd_restart(int argc, char **argv)
 {
@@ -323,6 +342,17 @@ esp_err_t serial_cli_init(void)
         .func = &cmd_heap_info,
     };
     esp_console_cmd_register(&heap_cmd);
+
+    /* set_search_key */
+    search_key_args.key = arg_str1(NULL, NULL, "<key>", "Brave Search API key");
+    search_key_args.end = arg_end(1);
+    esp_console_cmd_t search_key_cmd = {
+        .command = "set_search_key",
+        .help = "Set Brave Search API key for web_search tool",
+        .func = &cmd_set_search_key,
+        .argtable = &search_key_args,
+    };
+    esp_console_cmd_register(&search_key_cmd);
 
     /* set_proxy */
     proxy_args.host = arg_str1(NULL, NULL, "<host>", "Proxy host/IP");

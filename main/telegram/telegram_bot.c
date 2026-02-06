@@ -13,7 +13,7 @@
 
 static const char *TAG = "telegram";
 
-static char s_bot_token[128] = {0};
+static char s_bot_token[128] = MIMI_SECRET_TG_TOKEN;
 static int64_t s_update_offset = 0;
 
 /* HTTP response accumulator */
@@ -257,13 +257,15 @@ static void telegram_poll_task(void *arg)
 
 esp_err_t telegram_bot_init(void)
 {
-    /* Load token from NVS */
-    nvs_handle_t nvs;
-    esp_err_t err = nvs_open(MIMI_NVS_TG, NVS_READONLY, &nvs);
-    if (err == ESP_OK) {
-        size_t len = sizeof(s_bot_token);
-        nvs_get_str(nvs, MIMI_NVS_KEY_TG_TOKEN, s_bot_token, &len);
-        nvs_close(nvs);
+    /* Build-time secret takes highest priority */
+    if (s_bot_token[0] == '\0') {
+        nvs_handle_t nvs;
+        esp_err_t err = nvs_open(MIMI_NVS_TG, NVS_READONLY, &nvs);
+        if (err == ESP_OK) {
+            size_t len = sizeof(s_bot_token);
+            nvs_get_str(nvs, MIMI_NVS_KEY_TG_TOKEN, s_bot_token, &len);
+            nvs_close(nvs);
+        }
     }
 
     if (s_bot_token[0]) {
