@@ -5,6 +5,8 @@ idf_component_register(
         "wifi/wifi_manager.c"
         "telegram/telegram_bot.c"
         "llm/llm_proxy.c"
+        "llm/providers/anthropic.c"
+        "llm/providers/gemini.c"
         "agent/agent_loop.c"
         "agent/context_builder.c"
         "memory/memory_store.c"

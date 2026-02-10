@@ -34,6 +34,15 @@
 #ifndef MIMI_SECRET_SEARCH_KEY
 #define MIMI_SECRET_SEARCH_KEY      ""
 #endif
+#ifndef MIMI_SECRET_API_KEY_ANT
+#define MIMI_SECRET_API_KEY_ANT      ""
+#endif
+#ifndef MIMI_SECRET_API_KEY_GEM
+#define MIMI_SECRET_API_KEY_GEM      ""
+#endif
+#ifndef MIMI_SECRET_API_KEY_OAI
+#define MIMI_SECRET_API_KEY_OAI      ""
+#endif
 
 /* WiFi */
 #define MIMI_WIFI_MAX_RETRY          10
@@ -59,7 +68,7 @@
 #define MIMI_TIMEZONE                "PST8PDT,M3.2.0,M11.1.0"
 
 /* LLM */
-#define MIMI_LLM_DEFAULT_MODEL       "claude-opus-4-5"
+#define MIMI_LLM_DEFAULT_MODEL       "gemini-2.5-flash"
 #define MIMI_LLM_PROVIDER_DEFAULT    "anthropic"
 #define MIMI_LLM_MAX_TOKENS          4096
 #define MIMI_LLM_API_URL             "https://api.anthropic.com/v1/messages"

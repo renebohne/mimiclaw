@@ -102,13 +102,13 @@ static int cmd_set_model(int argc, char **argv)
     return 0;
 }
 
-/* --- set_model_provider command --- */
+/* --- set_provider command --- */
 static struct {
     struct arg_str *provider;
     struct arg_end *end;
 } provider_args;
 
-static int cmd_set_model_provider(int argc, char **argv)
+static int cmd_set_provider(int argc, char **argv)
 {
     int nerrors = arg_parse(argc, argv, (void **)&provider_args);
     if (nerrors != 0) {
@@ -284,13 +284,31 @@ static void print_config(const char *label, const char *ns, const char *key,
 
 static int cmd_config_show(int argc, char **argv)
 {
+    char provider[32] = "gemini";
+    nvs_handle_t nvs;
+    if (nvs_open(MIMI_NVS_LLM, NVS_READONLY, &nvs) == ESP_OK) {
+        size_t len = sizeof(provider);
+        nvs_get_str(nvs, MIMI_NVS_KEY_PROVIDER, provider, &len);
+        nvs_close(nvs);
+    }
+
+    char key_key[32] = "api_key_gem";
+    char model_key[32] = "model_gem";
+    if (strcmp(provider, "anthropic") == 0) {
+        strcpy(key_key, "api_key_ant");
+        strcpy(model_key, "model_ant");
+    } else if (strcmp(provider, "openai") == 0) {
+        strcpy(key_key, "api_key_oai");
+        strcpy(model_key, "model_oai");
+    }
+
     printf("=== Current Configuration ===\n");
     print_config("WiFi SSID",  MIMI_NVS_WIFI,   MIMI_NVS_KEY_SSID,     MIMI_SECRET_WIFI_SSID,  false);
     print_config("WiFi Pass",  MIMI_NVS_WIFI,   MIMI_NVS_KEY_PASS,     MIMI_SECRET_WIFI_PASS,  true);
     print_config("TG Token",   MIMI_NVS_TG,     MIMI_NVS_KEY_TG_TOKEN, MIMI_SECRET_TG_TOKEN,   true);
-    print_config("API Key",    MIMI_NVS_LLM,    MIMI_NVS_KEY_API_KEY,  MIMI_SECRET_API_KEY,    true);
-    print_config("Model",      MIMI_NVS_LLM,    MIMI_NVS_KEY_MODEL,    MIMI_SECRET_MODEL,      false);
     print_config("Provider",   MIMI_NVS_LLM,    MIMI_NVS_KEY_PROVIDER, MIMI_SECRET_MODEL_PROVIDER, false);
+    print_config("API Key",    MIMI_NVS_LLM,    key_key,               MIMI_SECRET_API_KEY,    true);
+    print_config("Model",      MIMI_NVS_LLM,    model_key,             MIMI_SECRET_MODEL,      false);
     print_config("Proxy Host", MIMI_NVS_PROXY,  MIMI_NVS_KEY_PROXY_HOST, MIMI_SECRET_PROXY_HOST, false);
     print_config("Proxy Port", MIMI_NVS_PROXY,  MIMI_NVS_KEY_PROXY_PORT, MIMI_SECRET_PROXY_PORT, false);
     print_config("Search Key", MIMI_NVS_SEARCH, MIMI_NVS_KEY_API_KEY,  MIMI_SECRET_SEARCH_KEY, true);
@@ -401,13 +419,13 @@ esp_err_t serial_cli_init(void)
     };
     esp_console_cmd_register(&model_cmd);
 
-    /* set_model_provider */
-    provider_args.provider = arg_str1(NULL, NULL, "<provider>", "Model provider (anthropic|openai)");
+    /* set_provider */
+    provider_args.provider = arg_str1(NULL, NULL, "<provider>", "Model provider (anthropic|gemini|openai)");
     provider_args.end = arg_end(1);
     esp_console_cmd_t provider_cmd = {
-        .command = "set_model_provider",
+        .command = "set_provider",
         .help = "Set LLM model provider (default: " MIMI_LLM_PROVIDER_DEFAULT ")",
-        .func = &cmd_set_model_provider,
+        .func = &cmd_set_provider,
         .argtable = &provider_args,
     };
     esp_console_cmd_register(&provider_cmd);

@@ -11,13 +11,14 @@
   <img src="assets/banner.png" alt="MimiClaw" width="480" />
 </p>
 
-**The world's first AI assistant(OpenClaw) on a $5 chip. No Linux. No Node.js. Just pure C**
+**The world's first AI assistant on a $5 chip. No Linux. No Node.js. Just pure C**
 
 MimiClaw turns a tiny ESP32-S3 board into a personal AI assistant. Plug it into USB power, connect to WiFi, and talk to it through Telegram — it handles any task you throw at it and evolves over time with local memory — all on a chip the size of a thumb.
 
 ## Meet MimiClaw
 
 - **Tiny** — No Linux, no Node.js, no bloat — just pure C
+- **Flexible** — Supports **Google Gemini** (default) and **Anthropic Claude**
 - **Handy** — Message it from Telegram, it handles the rest
 - **Loyal** — Learns from memory, remembers across reboots
 - **Energetic** — USB power, 0.5 W, runs 24/7
@@ -27,7 +28,7 @@ MimiClaw turns a tiny ESP32-S3 board into a personal AI assistant. Plug it into 
 
 ![](assets/mimiclaw.png)
 
-You send a message on Telegram. The ESP32-S3 picks it up over WiFi, feeds it into an agent loop — Claude thinks, calls tools, reads memory — and sends the reply back. Everything runs on a single $5 chip with all your data stored locally on flash.
+You send a message on Telegram. The ESP32-S3 picks it up over WiFi, feeds it into an agent loop — the AI thinks, calls tools, reads memory — and sends the reply back. Everything runs on a single $5 chip with all your data stored locally on flash.
 
 ## Quick Start
 
@@ -36,9 +37,31 @@ You send a message on Telegram. The ESP32-S3 picks it up over WiFi, feeds it int
 - An **ESP32-S3 dev board** with 16 MB flash and 8 MB PSRAM (e.g. Xiaozhi AI board, ~$10)
 - A **USB Type-C cable**
 - A **Telegram bot token** — talk to [@BotFather](https://t.me/BotFather) on Telegram to create one
-- An **Anthropic API key** — from [console.anthropic.com](https://console.anthropic.com)
+- An **API key** — either [Google AI Studio](https://aistudio.google.com/) (Gemini) or [Anthropic Console](https://console.anthropic.com/) (Claude)
 
 ### Install
+
+You can build MimiClaw using either **ESP-IDF** (v5.5+) or **PlatformIO**.
+
+#### Option A: PlatformIO (Recommended)
+
+1. Clone and enter:
+   ```bash
+   git clone https://github.com/memovai/mimiclaw.git
+   cd mimiclaw
+   ```
+2. (Optional) Create a Python 3.12 venv if your system python is > 3.13:
+   ```bash
+   python3.12 -m venv .venv
+   source .venv/bin/activate
+   pip install platformio
+   ```
+3. Build and flash:
+   ```bash
+   pio run --target upload --target monitor
+   ```
+
+#### Option B: ESP-IDF
 
 ```bash
 # You need ESP-IDF v5.5+ installed first:
@@ -48,6 +71,7 @@ git clone https://github.com/memovai/mimiclaw.git
 cd mimiclaw
 
 idf.py set-target esp32s3
+idf.py build
 ```
 
 ### Configure
@@ -64,7 +88,11 @@ Edit `main/mimi_secrets.h`:
 #define MIMI_SECRET_WIFI_SSID       "YourWiFiName"
 #define MIMI_SECRET_WIFI_PASS       "YourWiFiPassword"
 #define MIMI_SECRET_TG_TOKEN        "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
-#define MIMI_SECRET_API_KEY         "sk-ant-api03-xxxxx"
+
+/* Provider-specific keys */
+#define MIMI_SECRET_API_KEY_GEM     "AIzaSy..."     // Google Gemini Key
+#define MIMI_SECRET_API_KEY_ANT     "sk-ant-..."    // Anthropic Key
+
 #define MIMI_SECRET_SEARCH_KEY      ""              // optional: Brave Search API key
 #define MIMI_SECRET_PROXY_HOST      ""              // optional: e.g. "10.0.0.1"
 #define MIMI_SECRET_PROXY_PORT      ""              // optional: e.g. "7897"
@@ -81,7 +109,6 @@ ls /dev/cu.usb*          # macOS
 ls /dev/ttyACM*          # Linux
 
 # Flash and monitor (replace PORT with your port)
-# USB adapter: likely /dev/cu.usbmodem11401 (macOS) or /dev/ttyACM0 (Linux)
 idf.py -p PORT flash monitor
 ```
 
@@ -101,11 +128,12 @@ Connect via serial to configure or debug. **Config commands** let you change set
 **Runtime config** (saved to NVS, overrides build-time defaults):
 
 ```
+mimi> set_provider gemini         # switch between gemini and anthropic
+mimi> set_api_key YOUR_KEY        # sets key for CURRENT provider
+mimi> set_model gemini-2.0-flash  # change LLM model
 mimi> wifi_set MySSID MyPassword   # change WiFi network
 mimi> set_tg_token 123456:ABC...   # change Telegram bot token
-mimi> set_api_key sk-ant-api03-... # change Anthropic API key
-mimi> set_model claude-sonnet-4-5  # change LLM model
-mimi> set_proxy 127.0.0.1 7897  # set HTTP proxy
+mimi> set_proxy 127.0.0.1 7897    # set HTTP proxy
 mimi> clear_proxy                  # remove proxy
 mimi> set_search_key BSA...        # set Brave Search API key
 mimi> config_show                  # show all config (masked)
@@ -138,7 +166,7 @@ MimiClaw stores everything as plain text files you can read and edit:
 
 ## Tools
 
-MimiClaw uses Anthropic's tool use protocol — Claude can call tools during a conversation and loop until the task is done (ReAct pattern).
+MimiClaw uses a universal tool use protocol — the AI can call tools during a conversation and loop until the task is done (ReAct pattern).
 
 | Tool | Description |
 |------|-------------|
@@ -149,11 +177,11 @@ To enable web search, set a [Brave Search API key](https://brave.com/search/api/
 
 ## Also Included
 
+- **Multi-Provider Architecture** — easily extendable to OpenAI, Ollama, etc.
 - **WebSocket gateway** on port 18789 — connect from your LAN with any WebSocket client
 - **OTA updates** — flash new firmware over WiFi, no USB needed
 - **Dual-core** — network I/O and AI processing run on separate CPU cores
 - **HTTP proxy** — CONNECT tunnel support for restricted networks
-- **Tool use** — ReAct agent loop with Anthropic tool use protocol
 
 ## For Developers
 
