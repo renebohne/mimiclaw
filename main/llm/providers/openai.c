@@ -104,19 +104,12 @@ static esp_err_t openai_http_via_proxy(const char *post_data, resp_buf_t *rb, in
     int body_len = strlen(post_data);
     char header[512];
     int hlen = snprintf(header, sizeof(header),
-        "POST /v1/chat/completions HTTP/1.1
-"
-        "Host: api.openai.com
-"
-        "Authorization: Bearer %s
-"
-        "Content-Type: application/json
-"
-        "Content-Length: %d
-"
-        "Connection: close
-
-",
+        "POST /v1/chat/completions HTTP/1.1\r\n"
+        "Host: api.openai.com\r\n"
+        "Authorization: Bearer %s\r\n"
+        "Content-Type: application/json\r\n"
+        "Content-Length: %d\r\n"
+        "Connection: close\r\n\r\n",
         s_api_key, body_len);
 
     if (proxy_conn_write(conn, header, hlen) < 0 ||
@@ -139,9 +132,7 @@ static esp_err_t openai_http_via_proxy(const char *post_data, resp_buf_t *rb, in
         if (sp) *out_status = atoi(sp + 1);
     }
 
-    char *body = strstr(rb->data, "
-
-");
+    char *body = strstr(rb->data, "\r\n\r\n");
     if (body) {
         body += 4;
         size_t blen = rb->len - (body - rb->data);
@@ -241,7 +232,7 @@ static cJSON *convert_messages_openai(const char *system_prompt, cJSON *messages
                         cJSON_AddStringToObject(tc, "type", "function");
                         cJSON *func = cJSON_CreateObject();
                         cJSON_AddStringToObject(func, "name", cJSON_GetObjectItem(block, "name")->valuestring);
-                        cJSON_AddItemToObject(func, "arguments", cJSON_PrintUnformatted(cJSON_GetObjectItem(block, "input")));
+                        cJSON_AddStringToObject(func, "arguments", cJSON_PrintUnformatted(cJSON_GetObjectItem(block, "input")));
                         cJSON_AddItemToObject(tc, "function", func);
                         cJSON_AddItemToArray(tool_calls, tc);
                     }

@@ -249,15 +249,6 @@ static int cmd_set_search_key(int argc, char **argv)
     return 0;
 }
 
-/* --- wifi_scan command --- */
-static int cmd_wifi_scan(int argc, char **argv)
-{
-    (void)argc;
-    (void)argv;
-    wifi_manager_scan_and_print();
-    return 0;
-}
-
 /* --- config_show command --- */
 static void print_config(const char *label, const char *ns, const char *key,
                          const char *build_val, bool mask)

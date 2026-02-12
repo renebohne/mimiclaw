@@ -45,3 +45,4 @@ Thumbs.db
 # Agent / Local
 .gemini/
 GEMINI.md
+.venv/
