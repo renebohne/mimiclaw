@@ -228,11 +228,23 @@ static cJSON *convert_messages_openai(const char *system_prompt, cJSON *messages
                         text_content = cJSON_GetObjectItem(block, "text")->valuestring;
                     } else if (strcmp(type->valuestring, "tool_use") == 0) {
                         cJSON *tc = cJSON_CreateObject();
-                        cJSON_AddStringToObject(tc, "id", cJSON_GetObjectItem(block, "id")->valuestring);
+                        cJSON *id = cJSON_GetObjectItem(block, "id");
+                        if (id && cJSON_IsString(id)) {
+                            cJSON_AddStringToObject(tc, "id", id->valuestring);
+                        }
                         cJSON_AddStringToObject(tc, "type", "function");
+                        
                         cJSON *func = cJSON_CreateObject();
-                        cJSON_AddStringToObject(func, "name", cJSON_GetObjectItem(block, "name")->valuestring);
-                        cJSON_AddStringToObject(func, "arguments", cJSON_PrintUnformatted(cJSON_GetObjectItem(block, "input")));
+                        cJSON *name = cJSON_GetObjectItem(block, "name");
+                        if (name && cJSON_IsString(name)) {
+                            cJSON_AddStringToObject(func, "name", name->valuestring);
+                        }
+                        
+                        cJSON *input = cJSON_GetObjectItem(block, "input");
+                        if (input) {
+                            cJSON_AddItemToObject(func, "arguments", cJSON_Duplicate(input, 1));
+                        }
+                        
                         cJSON_AddItemToObject(tc, "function", func);
                         cJSON_AddItemToArray(tool_calls, tc);
                     }
@@ -372,10 +384,29 @@ static esp_err_t openai_chat_tools(const char *system_prompt,
                     cJSON *func = cJSON_GetObjectItem(tc, "function");
                     if (func) {
                         llm_tool_call_t *call = &resp->calls[resp->call_count];
-                        strncpy(call->id, cJSON_GetObjectItem(tc, "id")->valuestring, sizeof(call->id) - 1);
-                        strncpy(call->name, cJSON_GetObjectItem(func, "name")->valuestring, sizeof(call->name) - 1);
-                        call->input = strdup(cJSON_GetObjectItem(func, "arguments")->valuestring);
-                        call->input_len = strlen(call->input);
+                        
+                        cJSON *id = cJSON_GetObjectItem(tc, "id");
+                        if (id && cJSON_IsString(id)) {
+                            strncpy(call->id, id->valuestring, sizeof(call->id) - 1);
+                        }
+                        
+                        cJSON *name = cJSON_GetObjectItem(func, "name");
+                        if (name && cJSON_IsString(name)) {
+                            strncpy(call->name, name->valuestring, sizeof(call->name) - 1);
+                        }
+                        
+                        cJSON *args = cJSON_GetObjectItem(func, "arguments");
+                        if (args) {
+                            if (cJSON_IsString(args)) {
+                                call->input = strdup(args->valuestring);
+                            } else {
+                                /* If arguments is an object, stringify it for internal usage */
+                                call->input = cJSON_PrintUnformatted(args);
+                            }
+                            if (call->input) {
+                                call->input_len = strlen(call->input);
+                            }
+                        }
                         resp->call_count++;
                         resp->tool_use = true;
                     }
