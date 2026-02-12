@@ -48,6 +48,14 @@ static int cmd_wifi_status(int argc, char **argv)
     return 0;
 }
 
+static int cmd_wifi_scan(int argc, char **argv)
+{
+    (void)argc;
+    (void)argv;
+    wifi_manager_scan_and_print();
+    return 0;
+}
+
 /* --- set_tg_token command --- */
 static struct {
     struct arg_str *token;
@@ -420,7 +428,7 @@ esp_err_t serial_cli_init(void)
     esp_console_cmd_register(&model_cmd);
 
     /* set_provider */
-    provider_args.provider = arg_str1(NULL, NULL, "<provider>", "Model provider (anthropic|gemini|openai)");
+    provider_args.provider = arg_str1(NULL, NULL, "<provider>", "LLM provider (anthropic, gemini, openai)");
     provider_args.end = arg_end(1);
     esp_console_cmd_t provider_cmd = {
         .command = "set_provider",

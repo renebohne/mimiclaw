@@ -109,6 +109,7 @@ ls /dev/cu.usb*          # macOS
 ls /dev/ttyACM*          # Linux
 
 # Flash and monitor (replace PORT with your port)
+# USB adapter: likely /dev/cu.usbmodem11401 (macOS) or /dev/ttyACM0 (Linux)
 idf.py -p PORT flash monitor
 ```
 

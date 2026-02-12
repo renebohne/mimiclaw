@@ -7,6 +7,7 @@ idf_component_register(
         "llm/llm_proxy.c"
         "llm/providers/anthropic.c"
         "llm/providers/gemini.c"
+        "llm/providers/openai.c"
         "agent/agent_loop.c"
         "agent/context_builder.c"
         "memory/memory_store.c"

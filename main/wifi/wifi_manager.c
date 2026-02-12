@@ -41,22 +41,31 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
         s_connected = false;
         wifi_event_sta_disconnected_t *disc = (wifi_event_sta_disconnected_t *)event_data;
-        if (disc) {
-            ESP_LOGW(TAG, "Disconnected (reason=%d:%s)", disc->reason, wifi_reason_to_str(disc->reason));
-        }
+        
         if (s_retry_count < MIMI_WIFI_MAX_RETRY) {
             /* Exponential backoff: 1s, 2s, 4s, 8s, ... capped at 30s */
             uint32_t delay_ms = MIMI_WIFI_RETRY_BASE_MS << s_retry_count;
             if (delay_ms > MIMI_WIFI_RETRY_MAX_MS) {
                 delay_ms = MIMI_WIFI_RETRY_MAX_MS;
             }
-            ESP_LOGW(TAG, "Disconnected, retry %d/%d in %" PRIu32 "ms",
-                     s_retry_count + 1, MIMI_WIFI_MAX_RETRY, delay_ms);
+            if (disc) {
+                ESP_LOGW(TAG, "Disconnected (reason=%d:%s), retry %d/%d in %" PRIu32 "ms",
+                         disc->reason, wifi_reason_to_str(disc->reason),
+                         s_retry_count + 1, MIMI_WIFI_MAX_RETRY, delay_ms);
+            } else {
+                ESP_LOGW(TAG, "Disconnected, retry %d/%d in %" PRIu32 "ms",
+                         s_retry_count + 1, MIMI_WIFI_MAX_RETRY, delay_ms);
+            }
             vTaskDelay(pdMS_TO_TICKS(delay_ms));
             esp_wifi_connect();
             s_retry_count++;
         } else {
-            ESP_LOGE(TAG, "Failed to connect after %d retries", MIMI_WIFI_MAX_RETRY);
+            if (disc) {
+                ESP_LOGE(TAG, "Failed to connect (reason=%d:%s) after %d retries", 
+                         disc->reason, wifi_reason_to_str(disc->reason), MIMI_WIFI_MAX_RETRY);
+            } else {
+                ESP_LOGE(TAG, "Failed to connect after %d retries", MIMI_WIFI_MAX_RETRY);
+            }
             xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
         }
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
@@ -225,7 +234,7 @@ void wifi_manager_scan_and_print(void)
     ESP_LOGI(TAG, "Found %u APs:", ap_max);
     for (uint16_t i = 0; i < ap_max; i++) {
         const wifi_ap_record_t *ap = &ap_list[i];
-        ESP_LOGI(TAG, "  [%u] SSID=%s RSSI=%d CH=%d Auth=%d",
+        ESP_LOGI(TAG, "  [%u] SSID=%-32s RSSI=%d CH=%d Auth=%d",
                  i + 1, (const char *)ap->ssid, ap->rssi, ap->primary, ap->authmode);
     }
 

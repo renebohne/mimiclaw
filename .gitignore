@@ -41,3 +41,7 @@ nanobot/
 # OS
 .DS_Store
 Thumbs.db
+
+# Agent / Local
+.gemini/
+GEMINI.md

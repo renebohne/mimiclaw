@@ -14,6 +14,11 @@
 esp_err_t wifi_manager_init(void);
 
 /**
+ * Scan for nearby Access Points and print to log/serial.
+ */
+void wifi_manager_scan_and_print(void);
+
+/**
  * Start WiFi connection. Non-blocking, fires events.
  */
 esp_err_t wifi_manager_start(void);
